@@ -21,8 +21,6 @@
 
 In this exercise, we attempt to predict the likelihood of serious loan delinquency given a series borrower characteristics. The goal of this exercise was to import, describe, visualize, and clean a dataset of borrower data with loan delinquency status on which we could build a predictive model, then predict values for a set of borrowers for which the actual loan delinquency was unknown.
 \section{Statistics}
-\begin{enumerate}
-\item
 \par
 First, we have a table of summary statistics for the training dataset. Standard deviation is indicated by "std". The median is indicated by "50\%".
 \par
@@ -90,7 +88,7 @@ max    &                                   98 &                 20 \\
 missing values   &                                    0 &               3924 \\
 \hline
 \end{tabular}
-\new
+\newpage
 \section{Histograms}
 \par  
 Below are a series of histograms indicating the distributions of numeric variables in the training dataset.
@@ -121,12 +119,16 @@ Below are a series of histograms indicating the distributions of numeric variabl
 \\
 \end{center}
 \newpage
-as we can see, a number of the distributions demonstrate extremely long right tails: most of the data is concentrated at low values, but some are at very high values.
+As we can see, a number of the distributions demonstrate extremely long right tails: most of the data is concentrated at low values, but some are at very high values.
 \\
 Our variable of interest, in the last histogram entitled "SeriousDlqin2Yrs", shows that in the training dataset most of the individuals demonstrated no serious delinquency, but that a small subset showed very high delinquency rates.
 \\
 \section{Data Imputation}
-All of the variables in the dataset are numeric. In order to impute missing values, I simply filled the values the missing values with the mean for that variable. 
+All of the variables in the dataset are numeric. In order to impute missing values, I simply filled the values the missing values with the mean for that variable. This did not seem like an unreasonable choice given the size of the dataset and the continuous rather than the discrete nature of the variables (in which case mean values more sensitive to categorical regularities might have been used).
+\\
+This dataset with filled values is included in the repository "predicted
 \section{Model Choice and Predicted Values}
 In order to predict the values I tried three different machine learning methods \footnote{The three classifiers attempted were K-Nearest Neighbours, Logistic Regression, and Linear SVC}. The best method, called the K-Nearest Neighbors Method (which tries to decide on an unknown type by looking at those what who are most similar on a range of characteristics), which resulted in an accuracy of .934. Unfortunately, this accuracy is not very different from simply assuming all of the borrowers are \emph{NOT} delinquent. In our predicted values (found in the folder "data\_output/predicted\_values.txt") for the test dataset, only one or two borrowers were predicted to be delinquent. In the future, I hope to improve upon this accuracy metric by trying a wider variety of models and model specifics.
+\\
+The choice of a nearest neighbours method rather than a more probabilities focused logistic regression method seems reasonable because the dataset demonstrates that in probability all individuals will not be delinquent, but broad similarity between individuals across all characteristics may predict risk well.
 \end{document}

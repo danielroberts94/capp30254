@@ -27,27 +27,19 @@ def data_explore(data, dataset_name):
     num_data = data.select_dtypes(include = ['number'])
     for col in num_data:
         plt.figure()
-        try:
-            data[col].hist(bins=100)
-            plt.title(col)
-            file_path = 'graphics/' + dataset_name + "_" + str(col) + '.png'
-            plt.savefig(file_path)
-            plt.close()
-        except:
-            plt.close()
-            continue
+        data[col].hist(bins=100)
+        plt.title(col)
+        file_path = 'graphics/' + dataset_name + "_" + str(col) + '.png'
+        plt.savefig(file_path)
+        plt.close()
     str_data = data.select_dtypes(include = ['object'])
     for col in str_data:
         plt.figure()
-        try:
-            data[col].value_counts().plot(kind='bar')
-            plt.title(col)
-            file_path = 'graphics/' + dataset_name + "_" + str(col) + '.png'
-            plt.savefig(file_path)
-            plt.close()
-        except:
-            plt.close()
-            continue
+        data[col].value_counts().plot(kind='bar')
+        plt.title(col)
+        file_path = 'graphics/' + dataset_name + "_" + str(col) + '.png'
+        plt.savefig(file_path)
+        plt.close()
 #Simple function to fill variable missing vals with mean or mode of the variables
 def mean_mode_fill(data):
     num_data = data.select_dtypes(include = ['number'])
@@ -72,7 +64,12 @@ def data_dummify(data, col_names, quantiles):
     return data
 
 #Builds one of three types of classifiers at present. Future versions will be amenable to parameter choice
-def build_classifier(train_data, learnvar, feat_names, clf_name):
+def build_classifier(train_data, learnvar, feat_names, d):
+    result = makeDicts(d)
+    total = len(result)
+    criterions = [None]*total
+
+    
     train_feats = train_data[feat_names]
     train_learnvar = train_data[learnvar]
     clfs = {'log': LogisticRegression,
