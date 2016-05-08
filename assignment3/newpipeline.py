@@ -10,7 +10,6 @@ import math
 import numpy as np 
 import pandas as pd 
 from scipy import optimize
-import statsmodels.api as sm
 import matplotlib.pyplot as plt
 from sklearn.cross_validation import train_test_split
 from sklearn import metrics
@@ -78,6 +77,7 @@ def data_read(file_name):
 
 #Function to explore data by printing out summary statistics and producing histograms for numerical
 #data and bar charts for categorical data
+'''
 def data_explore(data, dataset_name):
     stats = data.describe()
     print stats
@@ -122,18 +122,18 @@ def plot_hist(df, title, num_bins, dataset_name, kind):
         file_path = 'graphics/' + dataset_name + "_" + title + '.png'
         plt.savefig(file_path)
         plt.close()
+    '''
 
 #Simple function to fill variable missing vals with mean or mode of the def
 def mean_mode_fill(data):
-    num_data = data.select_dtypes(include = ['number'])
-    str_data = data.select_dtypes(include = ['object'])
+    num_data = data
+    str_data = data
     if len(num_data.columns) > 0:
         data.update(num_data.fillna(num_data.mean()))
-    if len(str_data.columns) > 0:
-        data.update(str_data.fillna(num_data.mode()[0]))
+    #if len(str_data.columns) > 0:
+     #   data.update(str_data.fillna(num_data.mode()[0]))
     data.to_csv("data_output/fill_output.csv")
     return data
-
 #function to discretize a numerical variable into a set number of quantiles.
 def data_discretize(data, col_names, quantiles):
     for col, quant in zip(col_names,quantiles):
@@ -151,12 +151,10 @@ def build_classifier(x_var, y_var, k, model_dict):
     params = param_permutes(model_dict)
     model_num = len(params)
     print model_num
-    results = [None]*model_num
+    results = []
     folds = cross_validation.KFold(len(y_var), k)
     j = 0
     for pars in params:
-        if j > 0:
-            break
         clf = model_dict['model'](**pars)
         train_times = [None]*k
         pred_probs = [None]*k
@@ -165,34 +163,33 @@ def build_classifier(x_var, y_var, k, model_dict):
         accs = [None]*k
         #try:
         i = 0
-        try:
-            for train, test in folds:
-                #if i > 1:
-                #    break
-                print str(i) + "beginning the olfy loop!"
-                x_train, x_test = x_var._slice(train, 0), x_var._slice(test, 0)
-                y_train, y_test = y_var._slice(train, 0), y_var._slice(test, 0)
-                y_tests[i] = y_test
-                train_start = time()
-                model_fit = clf.fit(x_train, y_train)
-                time()
-                train_time = time() - train_start
-                train_times[i] = train_time
-                test_start = time()
-                pred_prob = model_fit.predict_proba(x_test)[:,1]
-                test_time = time() - test_start
-                test_times[i] = test_time
-                pred_probs[i] = pred_prob
-                accs[i] = model_fit.score(x_test,y_test)
-                i += 1 
-                print i
-        except:
-            print "Parameter Values Invalid"
-            continue
+        for train, test in folds:
+            #if i > 1:
+            #    break
+            print str(i) + "beginning the olfy loop!"
+            x_train, x_test = x_var._slice(train, 0), x_var._slice(test, 0)
+            y_train, y_test = y_var._slice(train, 0), y_var._slice(test, 0)
+            y_tests[i] = y_test
+            train_start = time()
+            model_fit = clf.fit(x_train, y_train)
+            time()
+            train_time = time() - train_start
+            train_times[i] = train_time
+            test_start = time()
+            pred_prob = model_fit.predict_proba(x_test)[:,1]
+            test_time = time() - test_start
+            test_times[i] = test_time
+            pred_probs[i] = pred_prob
+            accs[i] = model_fit.score(x_test,y_test)
+            i += 1 
+            print i
+        #except:
+        #    print "Parameter Values Invalid"
+        #    continue
         #if i > 1:
         #    break
         evals = evaluation(y_tests, pred_probs, train_times, test_times, accs, str(clf))
-        results[j] = evals
+        results.append(evals)
         print "after " + str(j)
         j += 1
     # THIS IS A CRITERIA THAT CAN BE CHANGED DEPENDING ON THE DESIRED RESULTS
@@ -273,7 +270,7 @@ def param_permutes(model_dict):
         params[i] = dict(zip(keys, param_cross[i]))
     return params
 
-def kfolds_train_only_pipe(data, y_name, folds, models = [modelRF], fill = mean_mode_fill):
+def kfolds_train_only_pipe(data, y_name, folds, models = modelList, fill = mean_mode_fill):
     data = mean_mode_fill(data)
     y_var = data[y_name]
     x_var = data.drop(y_name, 1)
@@ -310,7 +307,7 @@ def format_data(header, output_dic):
             temp[index] = x[j]
             index += 1
         index = 0
-        format[indxForm] = temp
+        format[index] = temp
         outdex += 1
     return format
 
