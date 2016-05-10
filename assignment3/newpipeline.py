@@ -28,16 +28,7 @@ from sklearn.preprocessing import StandardScaler
 from time import time 
 
 ##################################################################################
-'''
-List of models and parameters
-'''
-''
-criteriaHeader = ['AUC', 'Accuracy', 'Function called', 'Precision at .05',
-                  'Precision at .10', 'Precision at .2', 'Precision at .25', 'Precision at .5',
-                  'Precision at .75','Precision at .85','Recall at .05','Recall at .10',
-                  'Recall at .20','Recall at .25','Recall at .5','Recall at .75',
-                  'Recall at .85','f1 at 0.05','f1 at 0.1','f1 at 0.2','f1 at 0.25',
-                  'f1 at 0.5','f1 at 0.75','f1 at 0.85','test_time (sec)','train_time (sec)']
+# Model List and parameter values borrowed in part from Michael Fosco, though I tweaked some of the parameter values myself to best fit my computing constaraints and code.
 
 modelNames = ['LogisticRegression', 'KNeighborsClassifier', 'RandomForestClassifier', 'ExtraTreesClassifier',
               'AdaBoostClassifier', 'SVC', 'GradientBoostingClassifier', 'GaussianNB', 'DecisionTreeClassifier',
@@ -45,27 +36,25 @@ modelNames = ['LogisticRegression', 'KNeighborsClassifier', 'RandomForestClassif
 depth = [10, 20, 50]
 modelLR = {'model': LogisticRegression, 'solver': ['sag'], 'C' : [.01, .1, .5, 1],
           'class_weight': ['balanced', None],'tol' : [1e-5, 1e-3, 1], 'penalty': ['l2']} 
-modelKNN = {'model': neighbors.KNeighborsClassifier, 'weights': ['uniform', 'distance'], 'n_neighbors' : [100, 500, 1000],
-            'leaf_size': [60, 120],} 
-modelRF  = {'model': RandomForestClassifier, 'n_estimators': [25, 50, 100], 'criterion': ['gini', 'entropy'],
+modelKNN = {'model': neighbors.KNeighborsClassifier, 'weights': ['uniform', 'distance'], 'n_neighbors' : [20, 50, 100],
+            'leaf_size': [30 , 60],} 
+modelRF  = {'model': RandomForestClassifier, 'n_estimators': [10, 50, 100], 'criterion': ['gini', 'entropy'],
             'max_features': ['sqrt', 'log2'], 'max_depth': depth, 'min_samples_split': [20, 50], 
             'bootstrap': [True],} 
 modelET  = {'model': ExtraTreesClassifier, 'n_estimators': [25, 50, 100], 'criterion': ['gini', 'entropy'],
             'max_features': ['sqrt', 'log2'], 'max_depth': depth,
             'bootstrap': [True, False]}
-modelAB  = {'model': AdaBoostClassifier, 'algorithm': ['SAMME', 'SAMME.R'], 'n_estimators': [5, 10, 25, 50, 100]}#, 200]}
+modelAB  = {'model': AdaBoostClassifier, 'algorithm': ['SAMME', 'SAMME.R'], 'n_estimators': [10, 25, 50]}
 
-modelSVM = {'model': svm.SVC, 'C':[0.1,1], 'max_iter': [1000, 2000], 'probability': [True], 
+modelSVM = {'model': svm.SVC, 'C':[0.1,1], 'max_iter': [200, 500], 'probability': [True], 
             'kernel': ['rbf', 'poly', 'sigmoid', 'linear']}
 
 modelNB  = {'model': GaussianNB}
 modelDT  = {'model': DecisionTreeClassifier, 'criterion': ['gini', 'entropy'], 'max_depth': [10,20,50],
             'max_features': ['sqrt','log2'],'min_samples_split': [10, 20, 50]} 
-modelSGD = {'model': SGDClassifier, 'loss': ['modified_huber', 'perceptron'], 'penalty': ['l1', 'l2', 'elasticnet'], }
 
 modelList = [modelLR, modelKNN, modelRF, modelET, 
-             modelAB, modelSVM, modelNB, modelDT,
-             modelSGD] 
+             modelAB, modelSVM, modelNB, modelDT] 
 
 ##################################################################################
 
@@ -77,7 +66,6 @@ def data_read(file_name):
 
 #Function to explore data by printing out summary statistics and producing histograms for numerical
 #data and bar charts for categorical data
-'''
 def data_explore(data, dataset_name):
     stats = data.describe()
     print stats
@@ -122,7 +110,6 @@ def plot_hist(df, title, num_bins, dataset_name, kind):
         file_path = 'graphics/' + dataset_name + "_" + title + '.png'
         plt.savefig(file_path)
         plt.close()
-    '''
 
 #Simple function to fill variable missing vals with mean or mode of the def
 def mean_mode_fill(data):
@@ -150,11 +137,12 @@ def data_dummify(data, col_names, quantiles):
 def build_classifier(x_var, y_var, k, model_dict):
     params = param_permutes(model_dict)
     model_num = len(params)
-    print model_num
     results = []
+    print str(model_dict['model']) + " beginning"
     folds = cross_validation.KFold(len(y_var), k)
     j = 0
     for pars in params:
+        print "Parameter permutation " + str(j)
         clf = model_dict['model'](**pars)
         train_times = [None]*k
         pred_probs = [None]*k
@@ -164,9 +152,6 @@ def build_classifier(x_var, y_var, k, model_dict):
         #try:
         i = 0
         for train, test in folds:
-            #if i > 1:
-            #    break
-            print str(i) + "beginning the olfy loop!"
             x_train, x_test = x_var._slice(train, 0), x_var._slice(test, 0)
             y_train, y_test = y_var._slice(train, 0), y_var._slice(test, 0)
             y_tests[i] = y_test
@@ -182,12 +167,6 @@ def build_classifier(x_var, y_var, k, model_dict):
             pred_probs[i] = pred_prob
             accs[i] = model_fit.score(x_test,y_test)
             i += 1 
-            print i
-        #except:
-        #    print "Parameter Values Invalid"
-        #    continue
-        #if i > 1:
-        #    break
         evals = evaluation(y_tests, pred_probs, train_times, test_times, accs, str(clf))
         results.append(evals)
         print "after " + str(j)
@@ -196,8 +175,10 @@ def build_classifier(x_var, y_var, k, model_dict):
     # IN THIS CASE I USE AUC.
     # Joint Maximum, Joint Minima, and a variety of other combinations of features can be used to subset here to find
     # the best parameter set in a given model. This function call can be ommitted to output all possible parameter sets.
-    print results
-    results = maxim_param('AUC', results)
+    aucmax_results = maxim_param('AUC', results)
+    accmax_results = maxim_param('Accuracy', results)
+    results = accmax_results + aucmax_results
+    print str(clf) + " Done"
     return results
 
 def maxim_param(param_name, results):
@@ -258,6 +239,8 @@ def removeKey(d, key):
     del r[key]
     return r
 
+
+#Create parameter permutations
 def param_permutes(model_dict):
     params = []
     just_params = removeKey(model_dict, 'model')
@@ -270,6 +253,7 @@ def param_permutes(model_dict):
         params[i] = dict(zip(keys, param_cross[i]))
     return params
 
+Overlal pipeline call model
 def kfolds_train_only_pipe(data, y_name, folds, models = modelList, fill = mean_mode_fill):
     data = mean_mode_fill(data)
     y_var = data[y_name]
@@ -280,6 +264,7 @@ def kfolds_train_only_pipe(data, y_name, folds, models = modelList, fill = mean_
         results += mod_result
     return results
 
+#Output FUnciton borrowed in part from Michael Fosco
 def make_header(output_dic):
     header = None
     spot = 0
@@ -294,6 +279,7 @@ def make_header(output_dic):
     header.sort()
     return header
 
+#Output Funciton borrowed in part from Michael Fosco
 def format_data(header, output_dic):
     length = len(output_dic)
     format = [[]] * length
@@ -307,10 +293,11 @@ def format_data(header, output_dic):
             temp[index] = x[j]
             index += 1
         index = 0
-        format[index] = temp
+        format[outdex] = temp
         outdex += 1
     return format
 
+#Output FUnciton borrowed in part from Michael Fosco
 def write_output(file_name, output_dic):
     header = make_header(output_dic)
     fin = format_data(header, output_dic)

@@ -7,8 +7,8 @@ import numpy as np
 train_data = pp.data_read('data_input/cs-training.csv')
 
 #pp.data_explore(test_data, "test_set")
-#pp.data_explore(train_data, "train_set")
+pp.data_explore(train_data, "train_set")
 
 results = pp.kfolds_train_only_pipe(train_data, 'SeriousDlqin2yrs', 5)
-pp.write_output("test.csv", results)
+pp.write_output("final_output.csv", results)
 # Attempt Three different classifiers, find accuracies and predicted values
